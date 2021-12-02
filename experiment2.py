@@ -1,9 +1,10 @@
 # encoding: cp1251
-
+import pandas as pd
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import numpy as np
 from scipy import interpolate
+from matplotlib import pyplot as plt
 
 import cfms.MSS_Control as MSS
 
@@ -81,6 +82,33 @@ def stop():
 
     global MEASURER_OBJECT
     if MEASURER_OBJECT is not None:
+        DF = pd.DataFrame(dict(
+            T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.RT2,
+        ))
+        maxT = DF['T'].max()
+        minT = DF['T'].min()
+        num = 50
+        if len(DF['T']) > 10000:
+            num = 1000
+        elif len(DF['T']) > 100:
+            num = len(DF['T']) / 5
+        else:
+            num = None
+        if (maxT - minT) > 10 and num:
+            Temperature = np.linspace(minT, maxT, num=50)
+            step = Temperature[2] - Temperature[1]
+            resistance = []
+            for T in Temperature:
+                resistance.append(
+                    DF[(T - step / 2 < DF['T']) & (DF['T'] < T + step / 2)][
+                        'R'].mean())
+            plt.plot(Temperature, resistance)
+            plt.savefig(
+                'img/{:%Y%m%d-%H%M}-{sample}-{name}.png'.format(datetime.datetime.today(),
+                                                            sample=SAMPLE, name='graph_R(T)'))
+            logging.info(f'Image saved')
+        else:
+            logging.info(f'Too narrow temperature range or too few points')
         logging.info("Waiting for MEASURER to stop in up to 10 seconds...")
         MEASURER_OBJECT.requestInterruption()
         MEASURER_OBJECT.join(10)
@@ -1582,7 +1610,7 @@ class Measurer(threading.Thread):
         else:
             C1, U1 = "U1", "V"
         P = ["time", C1, "Phase1", "U2", "Phase2", "U3", "Phase3", "U4", "Phase4", "H", "Hall", "T", "T7", "T8", "RK",
-             'Rt1', 'Rt2', 'TR1', 'TR2', 'R_Sample']
+             'RT1', 'RT2', 'TR1', 'TR2', 'R_Sample']
         U = ["seconds", U1, "degrees", "V", "degrees", "V", "degrees", "V", "degrees", "T", "Ohm", "K", "Ohm", "Ohm",
              "Ohm", "Ohm", "Ohm", 'K', 'K', "Ohm"]
         self.datafile.write("\t".join(P) + "\n")
@@ -1590,11 +1618,11 @@ class Measurer(threading.Thread):
         self.datafile.flush()
 
     def write_data(self, time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees,
-                   U4_volts, Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, Rt1_Ohm, Rt2_Ohm, TR1_K,
+                   U4_volts, Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, RT1_Ohm, RT2_Ohm, TR1_K,
                    TR2_K,
                    R_Sample_Ohm):
         D = [time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees, U4_volts,
-             Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, Rt1_Ohm, Rt2_Ohm, TR1_K, TR2_K, R_Sample_Ohm]
+             Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, RT1_Ohm, RT2_Ohm, TR1_K, TR2_K, R_Sample_Ohm]
         self.datafile.write("\t".join([str(x) for x in D]) + "\n")
         self.datafile.flush()
 
@@ -1771,9 +1799,8 @@ class Measurer(threading.Thread):
                 Delta = (np.log(R2_list[0]) - np.log(R2_list[1])) / (1 / T2_list[0] - 1 / T2_list[1])
                 R0 = np.exp(
                     (T2_list[0] * np.log(R2_list[0]) - T2_list[1] * np.log(R2_list[1])) / (T2_list[0] - T2_list[1]))
-                T2_list_2 = np.arange(1, 1000, 0.1)
-                R2_list_2 = np.array([R0 * np.exp(Delta / x) for x in T2_list_2])
-                T2_interpolator = interpolate.interp1d(R2_list_2, T2_list_2, fill_value="extrapolate")
+
+                T2_interpolator = interpolate.interp1d(R2_list, T2_list, fill_value="extrapolate")
 
                 if I.CONFIG_MEASURE_Keithley_T1:
                     with DEVICELOCK:
@@ -1878,7 +1905,7 @@ class Measurer(threading.Thread):
                                              t5, t6, t7, t8)
                 else:
                     self.write_data(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t, t7, t8, rk, rt1,
-                                    rt2, r_sample, tr1, tr2)
+                                    rt2, tr1, tr2, r_sample)
 
             if self.EXPERIMENT == "step":
                 if self.STEP_LASTTIME is None or (
@@ -2218,9 +2245,38 @@ class Program(threading.Thread):
                 elif command == "stop":
                     if not dryrun:
                         if MEASURER_OBJECT is not None:
+                            DF = pd.DataFrame(dict(
+                                T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.RT2,
+                            ))
+                            maxT = DF['T'].max()
+                            minT = DF['T'].min()
+                            num = 50
+                            if len(DF['T']) > 10000:
+                                num = 1000
+                            elif len(DF['T']) > 100:
+                                num = len(DF['T']) / 5
+                            else:
+                                num = None
+                            if (maxT - minT) > 10 and num:
+                                Temperature = np.linspace(minT, maxT, num=50)
+                                step = Temperature[2] - Temperature[1]
+                                resistance = []
+                                for T in Temperature:
+                                    resistance.append(
+                                        DF[(T - step / 2 < DF['T']) & (DF['T'] < T + step / 2)][
+                                            'R'].mean())
+                                plt.plot(Temperature, resistance)
+                                plt.savefig(
+                                    'img/{:%Y%m%d-%H%M}-{sample}-{name}.png'.format(datetime.datetime.today(),
+                                                                                    sample=SAMPLE, name='graph_R(T)'))
+                                logging.info(f'Image saved')
+                            else:
+                                logging.info(f'Too narrow temperature range or too few points')
+
                             logging.info("Waiting for MEASURER to stop in up to 10 seconds...")
                             MEASURER_OBJECT.requestInterruption()
                             MEASURER_OBJECT.join(10)
+
                             if MEASURER_OBJECT.is_alive():
                                 logging.error("Error on waiting for MEASURER_OBJECT to stop")
                             del MEASURER_OBJECT
