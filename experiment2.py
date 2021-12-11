@@ -1,4 +1,6 @@
 # encoding: cp1251
+import math
+
 import pandas as pd
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -38,7 +40,7 @@ class Facility(enum.Enum):
 # EXPERIMENT ===========================================================================================================
 
 FACILITY = Facility.STUDENT_INSERT
-SAMPLE = "StudentInsertTest"
+SAMPLE = "Sn-6-3.1"
 I = None
 MEASURER_OBJECT = None
 PROGRAM_OBJECT = None
@@ -83,7 +85,7 @@ def stop():
     global MEASURER_OBJECT
     if MEASURER_OBJECT is not None:
         DF = pd.DataFrame(dict(
-            T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.RT2,
+            T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.R_Sample,
         ))
         maxT = DF['T'].max()
         minT = DF['T'].min()
@@ -105,7 +107,7 @@ def stop():
             plt.plot(Temperature, resistance)
             plt.savefig(
                 'img/{:%Y%m%d-%H%M}-{sample}-{name}.png'.format(datetime.datetime.today(),
-                                                            sample=SAMPLE, name='graph_R(T)'))
+                                                                sample=SAMPLE, name='graph_R(T)'))
             logging.info(f'Image saved')
         else:
             logging.info(f'Too narrow temperature range or too few points')
@@ -189,7 +191,7 @@ plotT.setXLink("R")
 
 curveRT1 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(247, 87, 225))
 curveRT2 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
-curveR_Sample = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 255))
+curveR_Sample = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 255, 255))
 # curveR1 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
 # curveR2 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
 # curveR3 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 255))
@@ -444,7 +446,7 @@ class Instruments:
         self.CONFIG_MEASURE_KEITHLEY6221 = False
 
         # If True, measure R1 from the first Keithley2000
-        self.CONFIG_MEASURE_Keithley_R1 = False
+        self.CONFIG_MEASURE_Keithley_R1 = True
         # If True, measure T1 from the second Keithley2000
         self.CONFIG_MEASURE_Keithley_T1 = True
         # If True, measure T2 from the third Keithley2000
@@ -648,7 +650,7 @@ class Instruments:
         # I().T.query("*IDN?")
         elif FACILITY == Facility.STUDENT_INSERT:
             if self.CONFIG_MEASURE_Keithley_R1:
-                self.R1: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::8::INSTR")
+                self.R1: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::5::INSTR")
                 self.R1.write("*CLS")
                 self.R1.write(f":FUNC \'FRES\'")
 
@@ -1299,7 +1301,7 @@ class Instruments:
                 return MSS.get_temperature_B()[0]
 
             elif FACILITY == Facility.STUDENT_INSERT:
-                R1_list = [1090.4, 66, 2]
+                R1_list = [1090.4, 234.73, 2]
                 T1_list = [297.6, 77, 4.2]
                 T1_interpolator = interpolate.interp1d(R1_list, T1_list, fill_value="extrapolate")
                 return T1_interpolator(float(I.T1.query(":DATA?")))
@@ -1598,7 +1600,7 @@ class Measurer(threading.Thread):
                                                                          name=name)
 
         os.makedirs(os.path.join("data", dirname), exist_ok=True)
-
+        os.makedirs('img', exist_ok=True)
         self.data_filename = os.path.join("data", dirname, data_filename)
         self.datafile = open(self.data_filename, "wt")
         self.proc_filename = os.path.join("data", dirname, proc_filename)
@@ -1791,15 +1793,11 @@ class Measurer(threading.Thread):
                 else:
                     hall = 0
 
-                R1_list = [1090.4, 66, 2]
+                R1_list = [1090.4, 234.73, 2]
                 T1_list = [297.6, 77, 4.2]
                 T1_interpolator = interpolate.interp1d(R1_list, T1_list, fill_value="extrapolate")
-                R2_list = [997.4, 10258]
-                T2_list = [297.6, 77]
-                Delta = (np.log(R2_list[0]) - np.log(R2_list[1])) / (1 / T2_list[0] - 1 / T2_list[1])
-                R0 = np.exp(
-                    (T2_list[0] * np.log(R2_list[0]) - T2_list[1] * np.log(R2_list[1])) / (T2_list[0] - T2_list[1]))
-
+                T2_list = np.arange(3, 350, 0.1)
+                R2_list = np.exp(6.85541945) * np.exp(0.8522265 / T2_list ** 0.5)
                 T2_interpolator = interpolate.interp1d(R2_list, T2_list, fill_value="extrapolate")
 
                 if I.CONFIG_MEASURE_Keithley_T1:
@@ -2246,7 +2244,7 @@ class Program(threading.Thread):
                     if not dryrun:
                         if MEASURER_OBJECT is not None:
                             DF = pd.DataFrame(dict(
-                                T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.RT2,
+                                T=MEASURER_OBJECT.TR2, R=MEASURER_OBJECT.R_Sample,
                             ))
                             maxT = DF['T'].max()
                             minT = DF['T'].min()
