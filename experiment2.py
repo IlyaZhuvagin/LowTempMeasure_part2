@@ -165,13 +165,17 @@ curveR4 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbo
 curveR5 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(127, 127, 127))
 curveR6 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 255, 255))
 curveRK = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
+curveRUx = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(127, 127, 127))
+curveRUy = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
+curveRUr = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 255))
 curvePh1 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
 curvePh2 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
 curvePh3 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 255))
 curvePh4 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 255, 255))
 curveH = plotH.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
 curveHall = plotH.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
-curveT = plotT.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
+curveTsample1 = plotT.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
+curveTsample2 = plotT.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 128))
 curveT1 = plotT.plot(symbol="o", pen=None, symbolPen=None, symbolSize=3, symbolBrush=pg.mkBrush(0, 0, 128))
 curveT2 = plotT.plot(symbol="o", pen=None, symbolPen=None, symbolSize=3, symbolBrush=pg.mkBrush(0, 0, 255))
 curveT3 = plotT.plot(symbol="o", pen=None, symbolPen=None, symbolSize=3, symbolBrush="g")
@@ -235,9 +239,9 @@ def update_plots():
                 "Experiment2 - {} points (slice factor {}) - {:.1f} points per second".format(number_of_points,
                                                                                               SLICE_FACTOR, pps))
 
-        if len(MEASURER_OBJECT.R1) > 0:
+        if len(MEASURER_OBJECT.R_Sample) > 0:
             curveR1.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
-                            MEASURER_OBJECT.R1[:number_of_points:SLICE_FACTOR])
+                            MEASURER_OBJECT.R_Sample[:number_of_points:SLICE_FACTOR])
         if len(MEASURER_OBJECT.R2) > 0:
             curveR2.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                             MEASURER_OBJECT.R2[:number_of_points:SLICE_FACTOR])
@@ -251,6 +255,16 @@ def update_plots():
         if len(MEASURER_OBJECT.RK) > 0:
             curveRK.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                             MEASURER_OBJECT.RK[:number_of_points:SLICE_FACTOR])
+        if len(MEASURER_OBJECT.Ux) > 0:
+            curveRUx.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                            MEASURER_OBJECT.Ux[:number_of_points:SLICE_FACTOR])
+        if len(MEASURER_OBJECT.Uy) > 0:
+            curveRUy.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                            MEASURER_OBJECT.Uy[:number_of_points:SLICE_FACTOR])
+        if len(MEASURER_OBJECT.Ur) > 0:
+            curveRUr.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                            MEASURER_OBJECT.Ur[:number_of_points:SLICE_FACTOR])
+
 
         if len(MEASURER_OBJECT.PHASE1) > 0:
             curvePh1.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
@@ -264,6 +278,9 @@ def update_plots():
         if len(MEASURER_OBJECT.PHASE4) > 0:
             curvePh4.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                              MEASURER_OBJECT.PHASE4[:number_of_points:SLICE_FACTOR])
+        if len(MEASURER_OBJECT.Tetta) > 0:
+            curvePh4.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                             MEASURER_OBJECT.Tetta[:number_of_points:SLICE_FACTOR])
         if len(MEASURER_OBJECT.H) > 0:
             curveH.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                            MEASURER_OBJECT.H[:number_of_points:SLICE_FACTOR])
@@ -287,9 +304,12 @@ def update_plots():
             curveT8.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                             MEASURER_OBJECT.T8[:number_of_points:SLICE_FACTOR])
         else:
-            if len(MEASURER_OBJECT.T) > 0:
-                curveT.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
-                               MEASURER_OBJECT.T[:number_of_points:SLICE_FACTOR])
+            if len(MEASURER_OBJECT.Tsample1) > 0:
+                curveTsample1.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                               MEASURER_OBJECT.Tsample1[:number_of_points:SLICE_FACTOR])
+            if len(MEASURER_OBJECT.Tsample2) > 0:
+                curveTsample2.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+                               MEASURER_OBJECT.Tsample2[:number_of_points:SLICE_FACTOR])
             # Lots or errors if None in array!
             # if len(MEASURER_OBJECT.T7) > 0:
             #    curveT7.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],MEASURER_OBJECT.T7[:number_of_points:SLICE_FACTOR])
@@ -371,7 +391,7 @@ class Instruments:
         # If false, the MXC temperature is measured. PT lower flange otherwise
         self.CONFIG_MEASURE_PT_FLANGE = False
         # If false, Yokogawa is used for gate handling
-        self.CONFIG_GATE_AVAILABLE = True
+        self.CONFIG_GATE_AVAILABLE = False
         # If true, Keithley 2000 for HALL measuring is used
         self.CONFIG_MEASURE_HALL = False
         # If not None, Stanford research CS580 is used
@@ -395,11 +415,13 @@ class Instruments:
         self.CONFIG_MEASURE_KEITHLEY6221 = False
 
         # If True, measure R1 from the first Keithley2000
-        self.CONFIG_MEASURE_Keithley_R1 = False
+        self.CONFIG_MEASURE_Keithley_R1 = True
         # If True, measure T from channel A from the LakeShore
-        self.CONFIG_MEASURE_LakeShore_T1 = False
+        self.CONFIG_MEASURE_LakeShore_T1 = True
         # If True, measure T from channel A and channel B from the LakeShore
         self.CONFIG_MEASURE_LakeShore_T2 = False
+        # If True, measure Voltage from lockin
+        self.CONFIG_MEASURE_Lockin = True
         logging.info("init_instruments")
 
         RM = pyvisa.ResourceManager()
@@ -599,14 +621,17 @@ class Instruments:
         # I().T.query("*IDN?")
         elif FACILITY == Facility.STUDENT_INSERT:
             if self.CONFIG_MEASURE_Keithley_R1:
-                self.R1: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::8::INSTR")
-                self.R1.write("*CLS")
+                self.Rsample: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::13::INSTR")
+                self.Rsample.write("*CLS")
 
             if self.CONFIG_MEASURE_LakeShore_T1:
-                self.LT1: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::12::INSTR")
+                self.LT1: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::14::INSTR")
 
             if self.CONFIG_MEASURE_LakeShore_T2:
-                self.LT2: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::12::INSTR")
+                self.LT2: pyvisa.resources.GPIBInstrument = RM.open_resource("GPIB0::14::INSTR")
+            if self.CONFIG_MEASURE_Lockin:
+                self.Lockin: pyvisa.resources.SerialInstrument = RM.open_resource("GPIB0::8::INSTR")
+                self.Lockin.write("*CLS")
         logging.info("init_instruments finished")
 
     def __del__(self):
@@ -621,11 +646,13 @@ class Instruments:
         if self.CONFIG_MEASURE_R4:
             self.R4.close()
         if self.CONFIG_MEASURE_Keithley_R1:
-            self.R1.close()
+            self.Rsample.close()
         if self.CONFIG_MEASURE_LakeShore_T1:
             self.LT1.close()
         if self.CONFIG_MEASURE_LakeShore_T2:
             self.LT2.close()
+        if self.CONFIG_MEASURE_Lockin:
+            self.Lockin.close()
 
         if FACILITY == Facility.BLUEFORS:
             if self.CONFIG_MEASURE_FIELD:
@@ -1209,6 +1236,9 @@ class Instruments:
         elif FACILITY == Facility.CFMS:
             logging.warning("NOT IMPLEMENTED (AND WILL NEVER BE)")
             temp_in_kelvin = 0
+        elif FACILITY == Facility.STUDENT_INSERT:
+            logging.warning("NOT IMPLEMENTED (AND WILL NEVER BE)")
+            temp_in_kelvin = 0
         return temp_in_kelvin
 
     def set_target_temperature(self, temp_in_kelvin, ramp_in_mK_per_min=None):
@@ -1240,6 +1270,9 @@ class Instruments:
             elif FACILITY == Facility.CFMS:
                 # return I.T.query_ascii_values("KRDG? A")[0]
                 return MSS.get_temperature_B()[0]
+
+            elif FACILITY == Facility.STUDENT_INSERT:
+                return I.LT1.query_ascii_values("KRDG? A")[0]
 
     def get_temperature_ramp(self):
         with DEVICELOCK:
@@ -1392,7 +1425,7 @@ class DiDvMeasurer(threading.Thread):
         self.T1, self.T2, self.T3, self.T5, self.T6 = [], [], [], [], []
         self.T7, self.T8 = [], []
 
-        self.START_TIME = pg.ptime.time()
+        self.START_TIME = time.perf_counter()
 
         self.current_start = None
         self.current_finish = None
@@ -1518,7 +1551,8 @@ class Measurer(threading.Thread):
         self.T1, self.T2, self.T3, self.T5, self.T6 = [], [], [], [], []
         self.T7, self.T8 = [], []
         self.R_Sample = []
-        self.START_TIME = pg.ptime.time()
+        self.Ux, self.Uy, self.Ur, self.Tetta = [], [], [], []
+        self.START_TIME = time.perf_counter()
 
         self.AUTORANGE = True
 
@@ -1545,18 +1579,19 @@ class Measurer(threading.Thread):
         else:
             C1, U1 = "U1", "V"
         P = ["time", 'C1', "Phase1", "U2", "Phase2", "U3", "Phase3", "U4", "Phase4", "H", "Hall", "T", "T7", "T8", "RK",
-             'T_Sample_1', 'T_Sample_2', 'R_Sample']
+             'T_Sample_1', 'T_Sample_2', 'R_Sample', 'Ux', 'Uy', 'Ur', 'Tetta']
         U = ["seconds", 'U1', "degrees", "V", "degrees", "V", "degrees", "V", "degrees", "T", "Ohm", "K", "Ohm", "Ohm",
-             "Ohm", 'K', 'K', "Ohm"]
+             "Ohm", 'K', 'K', "Ohm", 'V', 'V', 'V', 'degrees']
         self.datafile.write("\t".join(P) + "\n")
         self.datafile.write("\t".join(U) + "\n")
         self.datafile.flush()
 
     def write_data(self, time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees,
                    U4_volts, Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, T_Sample1_K, T_Sample2_K,
-                   R_Sample_Ohm):
+                   R_Sample_Ohm, X_V, Y_V, R_V, Tetta_degrees):
         D = [time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees, U4_volts,
-             Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, T_Sample1_K, T_Sample2_K, R_Sample_Ohm]
+             Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, T_Sample1_K, T_Sample2_K, R_Sample_Ohm, X_V,
+             Y_V, R_V, Tetta_degrees]
         self.datafile.write("\t".join([str(x) for x in D]) + "\n")
         self.datafile.flush()
 
@@ -1632,7 +1667,7 @@ class Measurer(threading.Thread):
         r4_output_overload_in_row = 0
 
         while not self.stopped:
-            TIME = pg.ptime.time() - self.START_TIME
+            TIME = time.perf_counter() - self.START_TIME
 
             try:
                 if I.CONFIG_MEASURE_R1:
@@ -1734,9 +1769,16 @@ class Measurer(threading.Thread):
 
                 if I.CONFIG_MEASURE_Keithley_R1:
                     with DEVICELOCK:
-                        r_sample = I.Ohm.query_ascii_values(':READ?')
+                        r_sample = I.Rsample.query_ascii_values(':DATA?')[0]
                 else:
                     r_sample = 0
+                if I.CONFIG_MEASURE_Lockin:
+                    with DEVICELOCK:
+                        data = I.Lockin.query_ascii_values('SNAP? 1,2,3,4')
+                        ux=data[0]
+                        uy=data[1]
+                        ur=data[2]
+                        tetta=data[3]
                 if I.CONFIG_MEASURE_RK:
                     with DEVICELOCK:
                         rk_v, rk_i, rk_r, rk_g1, rk_g2 = I.RK.query_ascii_values(":READ?")
@@ -1750,6 +1792,8 @@ class Measurer(threading.Thread):
                     tc_channel = I.get_tc_channel()
                 elif FACILITY == Facility.CFMS:
                     tc_channel = 6
+                elif FACILITY == FACILITY.STUDENT_INSERT:
+                    tc_channel = 'A'
 
                 if tc_channel == 6:
                     t = I.get_temperature()
@@ -1808,15 +1852,20 @@ class Measurer(threading.Thread):
                 self.T8.append(t8)
                 self.RK.append(rk)
                 self.TIME.append(TIME)
-                self.Tsample2.append(tr1)
-                self.Tsample1.append(tr2)
+                self.Tsample2.append(tr2)
+                self.Tsample1.append(tr1)
                 self.R_Sample.append(r_sample)
+                self.Ux.append(ux)
+                self.Uy.append(uy)
+                self.Ur.append(ur)
+                self.Tetta.append(tetta)
 
                 if self.EXPERIMENT == "cooldown":
                     self.write_data_cooldown(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t1, t2, t3,
                                              t5, t6, t7, t8)
                 else:
-                    self.write_data(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t, t7, t8, rk)
+                    self.write_data(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t, t7, t8, rk, tr1,
+                                    tr2, r_sample, ux, uy, ur, tetta)
 
             if self.EXPERIMENT == "step":
                 if self.STEP_LASTTIME is None or (
