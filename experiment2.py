@@ -36,7 +36,7 @@ class Facility(enum.Enum):
 # EXPERIMENT ===========================================================================================================
 
 FACILITY = Facility.STUDENT_INSERT
-SAMPLE = "HallSr-HallNa"
+SAMPLE = "Ba122_Ni0.06_1_2_cooldown"
 I = None
 MEASURER_OBJECT = None
 PROGRAM_OBJECT = None
@@ -165,8 +165,8 @@ curveR4 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbo
 curveR5 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(127, 127, 127))
 curveR6 = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 255, 255))
 curveRK = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
-curveRUx = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(127, 127, 127))
-curveRUy = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
+# curveRUx = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(127, 127, 127))
+# curveRUy = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
 curveRUr = plotR.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 0, 255))
 curvePh1 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(255, 0, 0))
 curvePh2 = plotPh.plot(symbol="o", pen=None, symbolBrush=None, symbolSize=1, symbolPen=pg.mkPen(0, 255, 0))
@@ -229,7 +229,7 @@ def update_plots():
             return
 
         # The maximum number of points per graph. Subsampling is used to decrease
-        MAX_NUMBER_OF_POINTS = 10000
+        MAX_NUMBER_OF_POINTS = 1000
         SLICE_FACTOR = int(number_of_points / MAX_NUMBER_OF_POINTS) + 1
 
         if number_of_points > 10:
@@ -255,12 +255,12 @@ def update_plots():
         if len(MEASURER_OBJECT.RK) > 0:
             curveRK.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                             MEASURER_OBJECT.RK[:number_of_points:SLICE_FACTOR])
-        if len(MEASURER_OBJECT.Ux) > 0:
-            curveRUx.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
-                            MEASURER_OBJECT.Ux[:number_of_points:SLICE_FACTOR])
-        if len(MEASURER_OBJECT.Uy) > 0:
-            curveRUy.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
-                            MEASURER_OBJECT.Uy[:number_of_points:SLICE_FACTOR])
+        # if len(MEASURER_OBJECT.Ux) > 0:
+        #     curveRUx.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+        #                     MEASURER_OBJECT.Ux[:number_of_points:SLICE_FACTOR])
+        # if len(MEASURER_OBJECT.Uy) > 0:
+        #     curveRUy.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
+        #                     MEASURER_OBJECT.Uy[:number_of_points:SLICE_FACTOR])
         if len(MEASURER_OBJECT.Ur) > 0:
             curveRUr.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                             MEASURER_OBJECT.Ur[:number_of_points:SLICE_FACTOR])
@@ -278,9 +278,9 @@ def update_plots():
         if len(MEASURER_OBJECT.PHASE4) > 0:
             curvePh4.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                              MEASURER_OBJECT.PHASE4[:number_of_points:SLICE_FACTOR])
-        if len(MEASURER_OBJECT.Tetta) > 0:
+        if len(MEASURER_OBJECT.Theta) > 0:
             curvePh4.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
-                             MEASURER_OBJECT.Tetta[:number_of_points:SLICE_FACTOR])
+                             MEASURER_OBJECT.Theta[:number_of_points:SLICE_FACTOR])
         if len(MEASURER_OBJECT.H) > 0:
             curveH.setData(MEASURER_OBJECT.TIME[:number_of_points:SLICE_FACTOR],
                            MEASURER_OBJECT.H[:number_of_points:SLICE_FACTOR])
@@ -415,11 +415,11 @@ class Instruments:
         self.CONFIG_MEASURE_KEITHLEY6221 = False
 
         # If True, measure R1 from the first Keithley2000
-        self.CONFIG_MEASURE_Keithley_R1 = True
+        self.CONFIG_MEASURE_Keithley_R1 = False
         # If True, measure T from channel A from the LakeShore
         self.CONFIG_MEASURE_LakeShore_T1 = True
         # If True, measure T from channel A and channel B from the LakeShore
-        self.CONFIG_MEASURE_LakeShore_T2 = False
+        self.CONFIG_MEASURE_LakeShore_T2 = True
         # If True, measure Voltage from lockin
         self.CONFIG_MEASURE_Lockin = True
         logging.info("init_instruments")
@@ -1438,7 +1438,7 @@ class DiDvMeasurer(threading.Thread):
 
     def init_files(self, sample, name):
         dirname = "{:%Y-%m-%d}".format(datetime.datetime.today())
-        data_filename = "{:%Y%m%d-%H%M}-{sample}-{name}-didv.txt".format(datetime.datetime.today(), sample=sample,
+        data_filename = "{:%Y-%m-%d_%H-%M}_{sample}-{name}-didv.txt".format(datetime.datetime.today(), sample=sample,
                                                                          name=name)
 
         os.makedirs(os.path.join("data", dirname), exist_ok=True)
@@ -1551,7 +1551,7 @@ class Measurer(threading.Thread):
         self.T1, self.T2, self.T3, self.T5, self.T6 = [], [], [], [], []
         self.T7, self.T8 = [], []
         self.R_Sample = []
-        self.Ux, self.Uy, self.Ur, self.Tetta = [], [], [], []
+        self.Ux, self.Uy, self.Ur, self.Theta = [], [], [], []
         self.START_TIME = time.perf_counter()
 
         self.AUTORANGE = True
@@ -1562,8 +1562,8 @@ class Measurer(threading.Thread):
 
     def init_files(self, sample, name):
         dirname = "{:%Y-%m-%d}".format(datetime.datetime.today())
-        data_filename = "{:%Y%m%d-%H%M}-{sample}-{name}.txt".format(datetime.datetime.today(), sample=sample, name=name)
-        proc_filename = "{:%Y%m%d-%H%M}-{sample}-{name}-proc.txt".format(datetime.datetime.today(), sample=sample,
+        data_filename = "{:%Y-%m-%d_%H-%M}_{sample}-{name}.txt".format(datetime.datetime.today(), sample=sample, name=name)
+        proc_filename = "{:%Y-%m-%d_%H-%M}_{sample}-{name}-proc.txt".format(datetime.datetime.today(), sample=sample,
                                                                          name=name)
 
         os.makedirs(os.path.join("data", dirname), exist_ok=True)
@@ -1579,7 +1579,7 @@ class Measurer(threading.Thread):
         else:
             C1, U1 = "U1", "V"
         P = ["time", 'C1', "Phase1", "U2", "Phase2", "U3", "Phase3", "U4", "Phase4", "H", "Hall", "T", "T7", "T8", "RK",
-             'T_Sample_1', 'T_Sample_2', 'R_Sample', 'Ux', 'Uy', 'Ur', 'Tetta']
+             'T_Sample_1', 'T_Sample_2', 'R_Sample', 'Ux', 'Uy', 'Ur', 'Theta']
         U = ["seconds", 'U1', "degrees", "V", "degrees", "V", "degrees", "V", "degrees", "T", "Ohm", "K", "Ohm", "Ohm",
              "Ohm", 'K', 'K', "Ohm", 'V', 'V', 'V', 'degrees']
         self.datafile.write("\t".join(P) + "\n")
@@ -1588,10 +1588,10 @@ class Measurer(threading.Thread):
 
     def write_data(self, time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees,
                    U4_volts, Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, T_Sample1_K, T_Sample2_K,
-                   R_Sample_Ohm, X_V, Y_V, R_V, Tetta_degrees):
+                   R_Sample_Ohm, X_V, Y_V, R_V, Theta_degrees):
         D = [time_secs, U1_volts, Phase1_degrees, U2_volts, Phase2_degrees, U3_volts, Phase3_degrees, U4_volts,
              Phase4_degrees, H_T, Hall_volts, T_K, T7_Ohm, T8_Ohm, RK_Ohm, T_Sample1_K, T_Sample2_K, R_Sample_Ohm, X_V,
-             Y_V, R_V, Tetta_degrees]
+             Y_V, R_V, Theta_degrees]
         self.datafile.write("\t".join([str(x) for x in D]) + "\n")
         self.datafile.flush()
 
@@ -1778,7 +1778,7 @@ class Measurer(threading.Thread):
                         ux=data[0]
                         uy=data[1]
                         ur=data[2]
-                        tetta=data[3]
+                        theta=data[3]
                 if I.CONFIG_MEASURE_RK:
                     with DEVICELOCK:
                         rk_v, rk_i, rk_r, rk_g1, rk_g2 = I.RK.query_ascii_values(":READ?")
@@ -1858,14 +1858,14 @@ class Measurer(threading.Thread):
                 self.Ux.append(ux)
                 self.Uy.append(uy)
                 self.Ur.append(ur)
-                self.Tetta.append(tetta)
+                self.Theta.append(theta)
 
                 if self.EXPERIMENT == "cooldown":
                     self.write_data_cooldown(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t1, t2, t3,
                                              t5, t6, t7, t8)
                 else:
                     self.write_data(TIME, u1, phase1, u2, phase2, u3, phase3, u4, phase4, h, hall, t, t7, t8, rk, tr1,
-                                    tr2, r_sample, ux, uy, ur, tetta)
+                                    tr2, r_sample, ux, uy, ur, theta)
 
             if self.EXPERIMENT == "step":
                 if self.STEP_LASTTIME is None or (
